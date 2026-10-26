@@ -20,15 +20,9 @@ export function TableQrDialog({
 }) {
   const rotate = useRotateQrToken(branchId);
 
-  // Burnout: guests order from the restaurant's own menu site when one is
-  // configured at build time (NEXT_PUBLIC_GUEST_MENU_URL), else from this
-  // app's built-in /order page.
-  const guestMenu = process.env.NEXT_PUBLIC_GUEST_MENU_URL?.replace(/\/$/, "");
   const orderUrl =
     table.qrToken && typeof window !== "undefined"
-      ? guestMenu
-        ? `${guestMenu}/t/${table.qrToken}`
-        : `${window.location.origin}/order/${table.qrToken}`
+      ? `${window.location.origin}/order/${table.qrToken}`
       : null;
 
   return (

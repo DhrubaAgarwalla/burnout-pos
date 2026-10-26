@@ -18,7 +18,6 @@ const { PrismaClient } = require(
   require.resolve('@prisma/client', { paths: [process.cwd()] }),
 );
 
-const MENU_SITE = (process.env.MENU_SITE || 'https://menu.srv1295557.hstgr.cloud').replace(/\/$/, '');
 const TABLES = [
   ...Array.from({ length: 11 }, (_, i) => ({ number: String(i + 1), name: null })),
   { number: 'TA', name: 'Takeaway' },
@@ -100,7 +99,8 @@ async function importMenu(branchId, data) {
             categoryId: categoryId.get(it.section),
             name: it.name,
             description: it.description,
-            imageUrl: it.image ? MENU_SITE + it.image : null,
+            // the web app serves Burnout's photos under /burnout/
+            imageUrl: it.image ? `/burnout${it.image}` : null,
             price: base,
             taxRatePercent: data.settings.taxRate,
             isVeg: true,

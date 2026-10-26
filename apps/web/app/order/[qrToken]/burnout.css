@@ -1,0 +1,367 @@
+/* ==========================================================
+   BURN OUT — the guests' menu (app/order/[qrToken]), restyled from
+   the Burnout menu site. Everything is scoped to the .burnout wrapper
+   the page's layout renders, so none of it reaches the POS screens:
+   tokens on the wrapper, base styles under it, and the component
+   classes prefixed with it. Utilities come from this app's Tailwind.
+
+   Two skins on one structure, picked by data-theme on the wrapper:
+   day   → bright, bold, appetising (11:30am onwards)
+   night → dark ember + neon glow (evening onwards)
+   ========================================================== */
+
+.burnout,
+.burnout[data-theme="night"] {
+  --bg:          #070505;
+  --bg-2:        #0e0b09;
+  --surface:     #13100d;
+  --surface-2:   #1c1713;
+  --border:      rgba(240, 214, 175, 0.11);
+  --border-strong: rgba(240, 214, 175, 0.22);
+
+  --text:        #f6efe3;
+  --text-dim:    #a9998a;
+  --text-faint:  #6f6155;
+
+  /* brand: gold + rose-copper from the Burnout wordmark */
+  --gold:        #e3b448;
+  --gold-soft:   #f5d98b;
+  --gold-deep:   #a9791a;
+  --copper:      #c98b6b;
+  --rose:        #e9b69a;
+
+  /* heat: used for CTAs, live badges, price emphasis */
+  --ember:       #ff6a1f;
+  --ember-soft:  #ff8f47;
+  --flame:       #e5261c;
+  --mint:        #38d39f;
+
+  --glow:        0 0 0 1px rgba(227, 180, 72, 0.40), 0 8px 40px -8px rgba(227, 180, 72, 0.35);
+  --glow-soft:   0 10px 40px -14px rgba(227, 180, 72, 0.28);
+  --card-shadow: 0 1px 0 0 rgba(255, 244, 225, 0.045) inset, 0 22px 44px -26px rgba(0,0,0,0.95);
+
+  --veg:         #4ade80;
+  --nonveg:      #ff5c5c;
+
+  --hero-wash:   radial-gradient(120% 85% at 50% -12%, rgba(227,180,72,0.22) 0%, rgba(201,139,107,0.10) 36%, transparent 70%);
+  --grain-op:    0.05;
+  color-scheme: dark;
+  --radius-card: 20px;
+}
+
+.burnout[data-theme="day"] {
+  --bg:          #fdf6ea;
+  --bg-2:        #fffdf9;
+  --surface:     #ffffff;
+  --surface-2:   #fbf0dd;
+  --border:      rgba(48, 30, 12, 0.11);
+  --border-strong: rgba(48, 30, 12, 0.22);
+
+  --text:        #1d140b;
+  --text-dim:    #6d5c4a;
+  --text-faint:  #9a8875;
+
+  --gold:        #a9791a;
+  --gold-soft:   #d3a63f;
+  --gold-deep:   #7d570d;
+  --copper:      #a5603f;
+  --rose:        #c07f5f;
+
+  --ember:       #d8410f;
+  --ember-soft:  #f2751f;
+  --flame:       #b8140b;
+  --mint:        #0f9e6e;
+
+  --glow:        0 0 0 1px rgba(169, 121, 26, 0.30), 0 10px 30px -12px rgba(169, 121, 26, 0.35);
+  --glow-soft:   0 12px 34px -18px rgba(169, 121, 26, 0.30);
+  --card-shadow: 0 1px 2px rgba(48,30,12,0.05), 0 14px 30px -22px rgba(48,30,12,0.5);
+
+  --veg:         #128a3f;
+  --nonveg:      #b8140b;
+
+  --hero-wash:   radial-gradient(120% 85% at 50% -12%, rgba(211,166,63,0.30) 0%, rgba(192,127,95,0.12) 38%, transparent 72%);
+  --grain-op:    0.035;
+  color-scheme: light;
+}
+
+/* behind the wrapper, so an overscroll bounce shows the menu's colour */
+body:has(.burnout) {
+  background: #070505;
+}
+body:has(.burnout[data-theme="day"]) {
+  background: #fdf6ea;
+}
+html:has(.burnout) {
+  scroll-behavior: smooth;
+  /* stop iOS inflating text in landscape */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Inside Tailwind's own cascade layers: unlayered CSS would outrank every
+   utility class regardless of specificity. */
+@layer base {
+  .burnout {
+    position: relative;
+    min-height: 100dvh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+  }
+
+  .burnout * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* the warm wash behind the hero */
+  .burnout::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: var(--hero-wash);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* a fine grain so flat areas never look like dead plastic */
+  .burnout::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: var(--grain-op);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .burnout h1, .burnout h2, .burnout h3 {
+    font-family: var(--font-display), ui-serif, Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.04;
+  }
+
+  /* never let a phone zoom in when a field is focused */
+  .burnout input, .burnout textarea, .burnout select {
+    font-size: 16px;
+  }
+}
+
+@layer components {
+  .burnout .display {
+    font-family: var(--font-display), ui-serif, Georgia, serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.04;
+  }
+
+  /* the wordmark treatment: wide geometric caps, like the printed logo */
+  .burnout .wordmark {
+    font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+  }
+
+  /* lifts page content above the two fixed wash layers */
+  .burnout .layer {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ---------- sticky chrome ----------
+     Fixed heights so the section nav can sit exactly under the app bar
+     with no magic numbers, and both clear a notch in standalone mode. */
+  .burnout .appbar {
+    height: calc(3.5rem + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
+  }
+  .burnout .subbar {
+    top: calc(3.5rem + env(safe-area-inset-top));
+  }
+
+  .burnout .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--card-shadow);
+  }
+
+  .burnout .glass {
+    background: color-mix(in oklab, var(--surface) 82%, transparent);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid var(--border);
+  }
+
+  /* Same look, no backdrop-filter. Used for the section nav so a phone
+     isn't compositing several blurred layers on every scroll frame. */
+  .burnout .bar {
+    background: color-mix(in oklab, var(--bg) 92%, var(--surface));
+  }
+
+  /* one definition of the grain, reused instead of inlining it per item */
+  .burnout .grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* A 188-item menu is ~35,000px tall. Let the browser skip layout and
+     paint for rows nowhere near the viewport. */
+  /* NOTE: this deliberately does NOT use `content-visibility: auto`.
+     It skips rendering work for offscreen rows, but it also made the
+     ADD buttons untappable — a skipped subtree is not hit-testable, and
+     rows were staying skipped. A menu whose ADD button ignores taps is
+     far worse than a heavier page, so the row stays plainly rendered.
+     Revisit only with device testing on a real phone. */
+  .burnout .defer-row {
+    contain: layout style;
+  }
+
+  /* brand gradient — the rose-gold of the Burnout wordmark */
+  .burnout .gold-text {
+    background: linear-gradient(100deg, var(--gold-soft), var(--gold) 38%, var(--copper) 72%, var(--rose));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* heat gradient — prices, live badges, "hot right now" */
+  .burnout .ember-text {
+    background: linear-gradient(100deg, var(--gold-soft), var(--ember-soft) 48%, var(--flame));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* primary CTA: gold plate, near-black label */
+  .burnout .btn-gold {
+    background: linear-gradient(140deg, var(--gold-soft), var(--gold) 46%, var(--gold-deep));
+    color: #150f08;
+    box-shadow: var(--glow-soft);
+    border-radius: 999px;
+    font-weight: 600;
+    transition: transform 0.18s cubic-bezier(.2,.8,.2,1), box-shadow 0.18s;
+  }
+  .burnout .btn-gold:active { transform: scale(0.965); }
+  @media (hover: hover) {
+    .burnout .btn-gold:hover { box-shadow: var(--glow); transform: translateY(-1px); }
+  }
+
+  .burnout .btn-ember {
+    background: linear-gradient(140deg, var(--ember-soft), var(--ember) 45%, var(--flame));
+    color: #fff;
+    border-radius: 999px;
+    font-weight: 600;
+    transition: transform 0.18s cubic-bezier(.2,.8,.2,1), box-shadow 0.18s;
+  }
+  .burnout .btn-ember:active { transform: scale(0.965); }
+
+  /* thin gold rule under section titles, like the printed menus */
+  .burnout .gold-rule {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.55;
+  }
+
+  /* veg / non-veg square marker */
+  .burnout .diet-mark {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    display: inline-grid; place-items: center;
+    border: 1.5px solid currentColor;
+    flex: none;
+  }
+  .burnout .diet-mark::after {
+    content: "";
+    width: 6px; height: 6px;
+    border-radius: 999px;
+    background: currentColor;
+  }
+
+  /* horizontal snap rails for combos / suggestions */
+  .burnout .rail {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-inline: 20px;
+    margin-inline: -20px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .burnout .rail::-webkit-scrollbar { display: none; }
+  .burnout .rail > * { scroll-snap-align: start; flex: none; }
+
+  .burnout .no-scrollbar { scrollbar-width: none; }
+  .burnout .no-scrollbar::-webkit-scrollbar { display: none; }
+
+  /* widens a small control's hit area to ~44px without changing its look */
+  .burnout .tap::after {
+    content: "";
+    position: absolute;
+    inset: -11px;
+  }
+}
+
+
+@layer utilities {
+  /* Sheets animate with CSS, not JS.
+     A JS-driven sheet starts at translateY(100%) — completely off-screen —
+     and is only usable once its animation lands. If that animation never
+     runs, the sheet is invisible and unclickable. A CSS animation always
+     ends at its `to` state even if the browser skips the tween, so the
+     sheet is guaranteed to be reachable. */
+  /* A SHORT slide, deliberately. Sliding the full 100% means that if the
+     animation timeline is ever frozen mid-flight, the sheet is stuck
+     completely off-screen and the guest cannot tap anything. From 18px,
+     the worst case is a sheet sitting 18px low — still fully usable. */
+  @keyframes sheet-up {
+    from { transform: translateY(18px); }
+    to   { transform: translateY(0); }
+  }
+  /* NOTE the absence of `both`. animation-fill-mode: both pins an element
+     to the animation's FROM state until the animation actually runs — so a
+     sheet sits off-screen and untappable if animations are suspended
+     (reduced motion, battery saver, a background tab, an embedded webview).
+     Without a fill mode the resting style applies whenever the animation
+     isn't running, so the sheet is always exactly where it belongs. */
+  .burnout .sheet-enter {
+    animation: sheet-up 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  .burnout .fade-enter {
+    animation: fade-in 0.2s ease-out;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: none; }
+  }
+  /* no `both` here either — content must never depend on an animation
+     running in order to be visible */
+  .burnout .rise { animation: rise 0.5s cubic-bezier(.2,.8,.2,1); }
+
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(227, 180, 72, 0.45); }
+    50%      { box-shadow: 0 0 0 12px rgba(227, 180, 72, 0); }
+  }
+  .burnout .pulse-glow { animation: pulse-glow 2s ease-out infinite; }
+
+  /* the menu's own text colours (its Tailwind theme had these) */
+  .burnout .text-dim { color: var(--text-dim); }
+  .burnout .text-faint { color: var(--text-faint); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .burnout, .burnout *, .burnout *::before, .burnout *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

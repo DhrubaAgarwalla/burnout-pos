@@ -1,7 +1,6 @@
 name: Publish Docker images
 
-# Burnout fork: amd64 only (the Hostinger VPS), and table QR codes point at the
-# restaurant's own menu site, set as the repository variable GUEST_MENU_URL.
+# Burnout fork: amd64 only — the images run on the Hostinger VPS.
 
 # Builds and publishes the backend/web images that the CasaOS/ZimaOS app
 # store manifest (casaos/docker-compose.yml) pulls as pre-built,
@@ -123,7 +122,6 @@ jobs:
           build-args: |
             BACKEND_URL=http://backend:4000
             APP_VERSION=${{ needs.version.outputs.version }}
-            NEXT_PUBLIC_GUEST_MENU_URL=${{ vars.GUEST_MENU_URL }}
           platforms: ${{ matrix.platform }}
           outputs: type=image,name=${{ env.REGISTRY }}/${{ needs.version.outputs.owner }}/${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
           cache-from: type=gha,scope=${{ matrix.image }}-${{ matrix.slug }}

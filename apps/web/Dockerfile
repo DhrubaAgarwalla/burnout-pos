@@ -27,10 +27,6 @@ RUN pnpm install --frozen-lockfile
 FROM deps AS builder
 ARG BACKEND_URL=http://backend:4000
 ENV BACKEND_URL=${BACKEND_URL}
-# Burnout: where table QR codes send guests (the restaurant's own menu site).
-# Empty keeps this app's built-in /order page.
-ARG NEXT_PUBLIC_GUEST_MENU_URL=
-ENV NEXT_PUBLIC_GUEST_MENU_URL=${NEXT_PUBLIC_GUEST_MENU_URL}
 COPY packages/types packages/types
 COPY apps/web apps/web
 RUN pnpm --filter @nodedr-restaurant/types build

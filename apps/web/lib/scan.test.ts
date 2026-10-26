@@ -26,11 +26,6 @@ test("recognises a table QR url", () => {
     kind: "table",
     qrToken: token,
   });
-  // Burnout: QR codes that open the restaurant's own menu site
-  assert.deepEqual(normalizeScan(`https://menu.example.com/t/${token}`), {
-    kind: "table",
-    qrToken: token,
-  });
 });
 
 test("rejects empty, oversized and unknown payloads instead of guessing", () => {

@@ -62,6 +62,8 @@ services:
       # Next's standalone server binds to $HOSTNAME, which Docker sets to the
       # container id — an address on only one of its two networks.
       HOSTNAME: 0.0.0.0
+      # the guests' menu page (/order/<qr>) renders from the API directly
+      BACKEND_URL: http://backend:4000
     depends_on:
       - backend
     networks:
