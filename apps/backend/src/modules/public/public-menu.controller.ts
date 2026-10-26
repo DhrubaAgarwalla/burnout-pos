@@ -29,8 +29,12 @@ export class PublicMenuController {
   @Post('menu/:qrToken/order')
   @UsePipes(new ZodValidationPipe(publicOrderSchema))
   createOrder(@Param('qrToken') qrToken: string, @Body() body: unknown) {
-    const { items, guestName } = body as { items: never; guestName: string };
-    return this.publicMenuService.createOrder(qrToken, items, guestName);
+    const { items, guestName, guestPhone } = body as {
+      items: never;
+      guestName: string;
+      guestPhone?: string;
+    };
+    return this.publicMenuService.createOrder(qrToken, items, guestName, guestPhone);
   }
 
   @Get('menu/:qrToken/status')

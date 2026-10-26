@@ -8,6 +8,7 @@
 //   - order ticket QR (printed on the kiosk ticket):  orderrestro:order:<orderNumber>
 //   - a bare order number typed/scanned as text:      20261017-0001   or  TA-DEMO-0001
 //   - the table QR URL:                               https://host/order/<32-hex qrToken>
+//     (or the guest menu site's https://host/t/<32-hex qrToken> — Burnout)
 
 export type ScanResult =
   | { kind: "order"; orderNumber: string }
@@ -16,7 +17,7 @@ export type ScanResult =
 
 export const ORDER_QR_PREFIX = "orderrestro:order:";
 const ORDER_NUMBER = /^[A-Z0-9]{1,12}(?:-[A-Z0-9]{1,12}){1,3}$/;
-const TABLE_URL = /\/order\/([a-f0-9]{32})\/?$/i;
+const TABLE_URL = /\/(?:order|t)\/([a-f0-9]{32})\/?$/i;
 
 export function orderQrPayload(orderNumber: string): string {
   return `${ORDER_QR_PREFIX}${orderNumber}`;

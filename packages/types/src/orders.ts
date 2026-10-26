@@ -112,6 +112,13 @@ export type AddOrderItemsDto = z.infer<typeof addOrderItemsSchema>;
 // only way staff can tell whose order this is (shown on KDS/order lists).
 export const publicOrderSchema = z.object({
   guestName: z.string().trim().min(1, "Please enter your name").max(60),
+  // Burnout: the guest's mobile, so the order lands on a Customer record
+  // (visit history, marketing list). Indian mobile: 10 digits, 6-9 first.
+  guestPhone: z
+    .string()
+    .trim()
+    .regex(/^[6-9]\d{9}$/, "Enter a 10-digit mobile number")
+    .optional(),
   items: z.array(cartItemSchema).min(1),
 });
 export type PublicOrderDto = z.infer<typeof publicOrderSchema>;

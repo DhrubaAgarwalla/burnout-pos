@@ -83,9 +83,38 @@ export class PublicMenuService {
     });
   }
 
-  async createOrder(qrToken: string, items: CartItemDto[], guestName: string) {
+  /**
+   * Burnout: the guest's mobile number becomes a Customer on this branch —
+   * found by number if they've been before (their name refreshed to what
+   * they typed this time), created otherwise.
+   */
+  private async customerFor(branchId: string, name: string, phone?: string) {
+    if (!phone) return null;
+    const existing = await this.prisma.customer.findFirst({
+      where: { branchId, phone },
+      orderBy: { createdAt: 'asc' },
+    });
+    if (existing) {
+      if (existing.name !== name) {
+        await this.prisma.customer.update({ where: { id: existing.id }, data: { name } });
+      }
+      return existing.id;
+    }
+    const created = await this.prisma.customer.create({
+      data: { branchId, name, phone },
+    });
+    return created.id;
+  }
+
+  async createOrder(
+    qrToken: string,
+    items: CartItemDto[],
+    guestName: string,
+    guestPhone?: string,
+  ) {
     const table = await this.resolveTable(qrToken);
     const branchId = table.floor.branchId;
+    const customerId = await this.customerFor(branchId, guestName, guestPhone);
 
     // A guest who already ordered once this visit and scans again to add
     // more (e.g. drinks now, food later) should land on the same tab, not
@@ -95,6 +124,9 @@ export class PublicMenuService {
       where: { branchId, tableId: table.id, status: 'OPEN' },
     });
     if (openOrder) {
+      if (customerId && !openOrder.customerId) {
+        await this.prisma.order.update({ where: { id: openOrder.id }, data: { customerId } });
+      }
       return this.ordersService.addItems(branchId, openOrder.id, items, {
         enforceModifierLimits: true,
         websiteOnly: true,
@@ -127,6 +159,7 @@ export class PublicMenuService {
         type: 'QR_ORDER',
         tableId: table.id,
         guestName,
+        ...(customerId ? { customerId } : {}),
         items,
       },
       { channel: 'ONLINE' },
@@ -150,6 +183,9 @@ export class PublicMenuService {
             nameSnapshot: true,
             quantity: true,
             status: true,
+            // Burnout: the guest's running tab shows each line's price and options
+            unitPriceSnapshot: true,
+            modifiers: { select: { nameSnapshot: true, priceAdjSnapshot: true } },
           },
         },
       },
