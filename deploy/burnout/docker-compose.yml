@@ -1,0 +1,89 @@
+# Burnout's OrderRestro (POS, kitchen display, admin) on the Hostinger VPS.
+# Lives in /docker/burnout-pos next to a .env (chmod 600, never committed):
+#   POSTGRES_PASSWORD=...   JWT_SECRET=...
+# The n8n stack's Traefik terminates HTTPS; nothing here publishes a host port.
+# No `updater` service: it needs the Docker socket, which on this shared VPS
+# would hand it every other project's containers too.
+#   docker compose pull && docker compose up -d    update to the latest images
+#   docker compose logs --tail=50 backend          see what it's doing
+name: burnout-pos
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: nodedr
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set it in .env}
+      POSTGRES_DB: nodedr_restaurant
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nodedr -d nodedr_restaurant"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    mem_limit: 384m
+    cpus: 1.0
+    logging: *logging
+
+  backend:
+    image: ghcr.io/dhrubaagarwalla/nodedr-restaurant-pos-backend:${POS_TAG:-edge}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://nodedr:${POSTGRES_PASSWORD}@postgres:5432/nodedr_restaurant
+      JWT_SECRET: ${JWT_SECRET:?set it in .env}
+      JWT_EXPIRES_IN: 12h
+      PORT: "4000"
+      CORS_ORIGIN: https://pos.srv1295557.hstgr.cloud
+      COOKIE_SECURE: "true"
+      UPLOADS_DIR: /data/uploads
+    volumes:
+      - uploads_data:/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    mem_limit: 512m
+    cpus: 1.0
+    logging: *logging
+
+  # Named pos-web, not web: it also joins the shared Traefik network, where a
+  # generic service name could collide with another project's.
+  pos-web:
+    image: ghcr.io/dhrubaagarwalla/nodedr-restaurant-pos-web:${POS_TAG:-edge}
+    restart: unless-stopped
+    environment:
+      # Next's standalone server binds to $HOSTNAME, which Docker sets to the
+      # container id — an address on only one of its two networks.
+      HOSTNAME: 0.0.0.0
+    depends_on:
+      - backend
+    networks:
+      - default
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=n8n_default
+      - traefik.http.routers.burnoutpos.rule=Host(`pos.srv1295557.hstgr.cloud`)
+      - traefik.http.routers.burnoutpos.entrypoints=web,websecure
+      - traefik.http.routers.burnoutpos.tls=true
+      - traefik.http.routers.burnoutpos.tls.certresolver=mytlschallenge
+      - traefik.http.services.burnoutpos.loadbalancer.server.port=3000
+    mem_limit: 384m
+    cpus: 1.0
+    logging: *logging
+
+networks:
+  traefik:
+    name: n8n_default
+    external: true
+
+volumes:
+  pg_data:
+  uploads_data:

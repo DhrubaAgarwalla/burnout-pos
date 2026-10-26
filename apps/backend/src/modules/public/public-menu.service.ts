@@ -177,6 +177,7 @@ export class PublicMenuService {
         status: true,
         acceptance: true,
         totalAmount: true,
+        createdAt: true,
         items: {
           select: {
             id: true,
