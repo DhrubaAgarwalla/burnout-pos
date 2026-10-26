@@ -130,11 +130,17 @@ export class OrdersService {
     branchId: string,
     menuItemIds: string[],
   ) {
+    // Burnout: a dish (or whole category) switched off is sold out — a guest
+    // whose menu page loaded before the switch must not still order it.
     const hidden = await this.prisma.menuItem.findMany({
       where: {
         id: { in: menuItemIds },
         branchId,
-        category: { showOnWebsite: false },
+        OR: [
+          { isActive: false },
+          { category: { isActive: false } },
+          { category: { showOnWebsite: false } },
+        ],
       },
       select: { name: true },
     });
