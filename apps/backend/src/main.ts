@@ -97,6 +97,13 @@ async function bootstrap() {
   process.env.JWT_SECRET = resolveJwtSecret();
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
+  // Burnout: browsers reach this API only through Traefik and the web app's
+  // /api proxy (or the menu site's server routes), so the socket peer is
+  // always a container on the Docker network. Trusting those private hops
+  // makes req.ip — what the rate limiter keys on — the guest's or staff
+  // device's own address instead of one bucket shared by everyone.
+  app.set('trust proxy', 'loopback, linklocal, uniquelocal');
+
   app.use(
     helmet({
       // Uploaded images are fetched cross-origin-ish (via the frontend's
